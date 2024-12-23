@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moving Crocodile Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        svg {
+            display: block;
+            background: #8kf31b; /* Green background for the crocodile's environment */
+        }
+        circle {
+            fill: #ff5722; /* Orange color for the body parts */
+        }
+        .head {
+            fill: #4caf50; /* Green head to make it distinct */
+        }
+    </style>
+</head>
+<body>
+    <svg id="canvas" width="100vw" height="100vh"></svg>
+    <script>
+        // Define variables
+        let elems = [];
+        const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        const N = 20; // Number of segments in the crocodile
+        let frm = 0;
+        const rad = 0.5;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // Get the SVG canvas
+        const svg = document.getElementById('canvas');
+
+        // Initialize body parts (circles) to represent the crocodile
+        for (let i = 0; i < N; i++) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            const radius = 15 - i; // Make the segments smaller towards the tail
+            circle.setAttribute('r', radius); 
+            circle.setAttribute('cx', width / 2);
+            circle.setAttribute('cy', height / 2);
+            if (i === 0) {
+                // Make the head of the crocodile green
+                circle.classList.add('head');
+            }
+            svg.appendChild(circle);
+            elems.push({ x: width / 2, y: height / 2, circle });
+        }
+
+        // Update pointer position on mouse move or touchmove
+        const updatePointerPosition = (e) => {
+            const touch = e.touches ? e.touches[0] : e; // Handle touch or mouse events
+            pointer.x = touch.clientX;
+            pointer.y = touch.clientY;
+        };
+
+        // Add touchmove event listener for mobile
+        window.addEventListener('touchmove', updatePointerPosition);
+
+        // Add mousemove event listener for desktop
+        window.addEventListener('mousemove', updatePointerPosition);
+
+        // Animation loop
+        const run = () => {
+            requestAnimationFrame(run);
+            frm++;
+
+            // First element (the head) moves towards the pointer and oscillates
+            const firstElem = elems[0];
+            const ax = (Math.cos(3 * frm) * rad * width) / height;
+            const ay = (Math.sin(4 * frm) * rad * height) / width;
+
+            firstElem.x += (ax + pointer.x - firstElem.x) / 10;
+            firstElem.y += (ay + pointer.y - firstElem.y) / 10;
+
+            // Update head position
+            firstElem.circle.setAttribute('cx', firstElem.x);
+            firstElem.circle.setAttribute('cy', firstElem.y);
+
+            // Update the rest of the elements (body segments)
+            for (let i = 1; i < N; i++) {
+                const currentElem = elems[i];
+                const previousElem = elems[i - 1];
+
+                // Calculate angle and positions for each segment
+                const angle = Math.atan2(currentElem.y - previousElem.y, currentElem.x - previousElem.x);
+                currentElem.x += (previousElem.x - currentElem.x + Math.cos(angle) * (100 - i) / 5) / 4;
+                currentElem.y += (previousElem.y - currentElem.y + Math.sin(angle) * (100 - i) / 5) / 4;
+
+                // Update body segment position
+                currentElem.circle.setAttribute('cx', currentElem.x);
+                currentElem.circle.setAttribute('cy', currentElem.y);
+            }
+
+        };
+
+        // Start the animation
+        run();
+    </script>
+</body>
+</html>
